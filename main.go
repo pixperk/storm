@@ -3,8 +3,8 @@ package main
 import (
 	"log"
 
-	"github.com/pixperk/storm/parser"
-	"github.com/pixperk/storm/transform"
+	"github.com/pixperk/storm/internal/parser"
+	"github.com/pixperk/storm/internal/transform/ir"
 )
 
 func main() {
@@ -14,6 +14,6 @@ func main() {
 	}
 
 	parser.DebugPrint(ast)
-	ir := transform.ToIR(ast)
-	transform.PrintIR(ir)
+	irVar := ir.ToIR(ast)
+	ir.PrintIR(irVar)
 }

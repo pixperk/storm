@@ -1,9 +1,9 @@
-package transform
+package ir
 
 import (
 	"fmt"
 
-	"github.com/pixperk/storm/parser"
+	"github.com/pixperk/storm/internal/parser"
 )
 
 type IRModel struct {
