@@ -20,7 +20,7 @@ func MapFieldType(s string) FieldType {
 	}
 }
 
-func MatchDirective(raws []string) ([]Directive, error) {
+func MapDirectives(raws []string) ([]Directive, error) {
 	var result []Directive
 	for _, r := range raws {
 		r = strings.TrimSpace(r)

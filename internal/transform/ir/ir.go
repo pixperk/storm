@@ -13,36 +13,46 @@ type IRModel struct {
 
 type IRField struct {
 	Name       string
-	Type       string //TODO : make an enum for types
+	Type       FieldType
+	Relation   string
 	IsArray    bool
-	Directives map[string]bool //TODO : make an enum for directives
+	Directives []Directive
 }
 
-func ToIR(ast *parser.DSLFile) []IRModel {
+func ToIR(ast *parser.DSLFile) ([]IRModel, error) {
 	var ir []IRModel
+	relation := ""
 
 	for _, m := range ast.Models {
 		model := IRModel{
-			Name: m.Name,
+			Name:   m.Name,
+			Fields: []IRField{},
 		}
 
 		for _, f := range m.Fields {
-			directiveMap := map[string]bool{}
-			for _, d := range f.Directives {
-				directiveMap[d] = true
+			fieldType := MapFieldType(f.Type.Name)
+			if fieldType == TypeRelation {
+				relation = f.Type.Name // Store the related model name
+			} else {
+				relation = ""
+			}
+			directives, err := MapDirectives(f.Directives)
+			if err != nil {
+				return nil, err
 			}
 
 			model.Fields = append(model.Fields, IRField{
 				Name:       f.Name,
-				Type:       f.Type.Name,
+				Type:       fieldType,
 				IsArray:    f.Type.IsArray,
-				Directives: directiveMap,
+				Directives: directives,
+				Relation:   relation,
 			})
 		}
 
 		ir = append(ir, model)
 	}
-	return ir
+	return ir, nil
 }
 
 // DebugPrintIR prints the IR representation of the DSL file.
