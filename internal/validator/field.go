@@ -36,8 +36,8 @@ func ValidateField(field ir.IRField, model ir.IRModel, modelNames map[string]boo
 	relatedModelName := field.Type.String()
 	if modelNames[relatedModelName] && relatedModelName != model.Name {
 		// This is a relation field pointing to another model
-		if !field.IsArray && !hasDirective(field, directive.DirBelongsTo) {
-			errList = multierror.Append(errList, errors.New("relation field must have @belongsTo directive"))
+		if !field.IsArray && !(hasDirective(field, directive.DirBelongsTo) || hasDirective(field, directive.DirHasOne)) {
+			errList = multierror.Append(errList, errors.New("relation field must have @belongsTo or @hasOne directive"))
 		}
 		if field.IsArray && !hasDirective(field, directive.DirHasMany) {
 			errList = multierror.Append(errList, errors.New("array relation field must have @hasMany directive"))

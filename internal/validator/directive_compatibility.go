@@ -64,6 +64,31 @@ func validateDirectiveTypeCompatibility(field ir.IRField, dir directive.Directiv
 		if fieldKind != fld.KindDateTime && fieldKind != fld.KindTimestamp {
 			errList = multierror.Append(errList, fmt.Errorf("@%s directive can only be used with DateTime or Timestamp types", dir.Kind.String()))
 		}
+
+		// Add more directive compatibility checks
+	case directive.DirHasOne:
+		// @hasOne should be used with non-array relation fields
+		if field.IsArray {
+			errList = multierror.Append(errList, fmt.Errorf("@hasOne directive cannot be used with array fields"))
+		}
+
+	case directive.DirEnum:
+		// @enum can only be used with string types
+		if fieldKind != fld.KindString && fieldKind != fld.KindText {
+			errList = multierror.Append(errList, fmt.Errorf("@enum directive can only be used with string types"))
+		}
+
+	case directive.DirNullable:
+		// @nullable can be used with any type, but typically not with relation fields
+		// No specific validation needed
+
+	case directive.DirMap:
+		// @map can be used with any type
+		// No specific validation needed
+
+	case directive.DirRelation:
+		// @relation should be used with model relation fields
+		// This would require more complex validation based on model references
 	}
 
 	return errList.ErrorOrNil()

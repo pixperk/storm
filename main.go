@@ -14,7 +14,6 @@ func main() {
 		log.Fatalf("Failed to parse DSL: %v", err)
 	}
 
-	parser.DebugPrint(ast)
 	irVar, err := ir.ToIR(ast)
 	if err != nil {
 		log.Fatalf("Failed to transform to IR: %v", err)

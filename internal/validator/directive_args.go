@@ -54,13 +54,34 @@ func validateDirectiveArgs(dir directive.Directive) error {
 		if len(dir.Args) != 1 {
 			errList = multierror.Append(errList, fmt.Errorf("@default directive requires exactly one argument"))
 		}
-
 	case directive.DirHasMany, directive.DirBelongsTo, directive.DirID, directive.DirAuto,
-		directive.DirUnique, directive.DirIndex, directive.DirUpdatedAt, directive.DirCreatedAt:
+		directive.DirUnique, directive.DirIndex, directive.DirUpdatedAt, directive.DirCreatedAt,
+		directive.DirNullable, directive.DirDefaultNow, directive.DirHasOne:
 		// These directives don't require arguments
 		if len(dir.Args) > 0 {
 			errList = multierror.Append(errList, fmt.Errorf("@%s directive does not accept arguments", dir.Kind.String()))
 		}
+
+	case directive.DirEnum:
+		// @enum requires at least one argument (enum values)
+		if len(dir.Args) < 1 {
+			errList = multierror.Append(errList, fmt.Errorf("@enum directive requires at least one argument"))
+		}
+
+	case directive.DirMap:
+		// @map requires exactly one argument (table or column name)
+		if len(dir.Args) != 1 {
+			errList = multierror.Append(errList, fmt.Errorf("@map directive requires exactly one argument"))
+		}
+	case directive.DirRelation:
+		// @relation can have 0-2 arguments (name and fields)
+		if len(dir.Args) > 2 {
+			errList = multierror.Append(errList, fmt.Errorf("@relation directive accepts at most two arguments"))
+		}
+
+	default:
+		// For any new directives not explicitly handled
+		errList = multierror.Append(errList, fmt.Errorf("unknown directive: @%s", dir.Kind.String()))
 	}
 
 	return errList.ErrorOrNil()
