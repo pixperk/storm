@@ -42,6 +42,12 @@ func ToIR(ast *parser.DSLFile) (*IR, error) {
 
 		for _, f := range m.Fields {
 			fieldKind := MapFieldType(f.Type.Name)
+			modelName := ""
+
+			// If it's a custom type (potentially a relation to another model), store the original type name
+			if fieldKind == field.KindCustom {
+				modelName = f.Type.Name
+			}
 
 			directives := make([]directive.Directive, 0, len(f.Directives))
 			for _, rawDir := range f.Directives {
@@ -64,7 +70,7 @@ func ToIR(ast *parser.DSLFile) (*IR, error) {
 				}
 			}
 
-			field := field.NewFieldType(fieldKind, directives)
+			field := field.NewFieldType(fieldKind, modelName, directives)
 			model.Fields = append(model.Fields, IRField{
 				Name:    f.Name,
 				Type:    *field,
@@ -90,9 +96,8 @@ func PrintIR(ir *IR) {
 		if len(m.Fields) == 0 {
 			fmt.Println("│  No fields defined                │")
 		} else {
-			for _, f := range m.Fields {
-				// Display field name and type
-				typeStr := f.Type.Kind.String()
+			for _, f := range m.Fields { // Display field name and type
+				typeStr := f.Type.String()
 				if f.IsArray {
 					typeStr += "[]"
 				}

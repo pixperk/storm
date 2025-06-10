@@ -9,13 +9,15 @@ import (
 // FieldType represents a complete field type with options
 type FieldType struct {
 	Kind       FieldKind
+	ModelName  string // Used for custom/relation types to store the model name
 	Directives []directive.Directive
 }
 
 // NewFieldType creates a new FieldType with the given kind
-func NewFieldType(kind FieldKind, dirs []directive.Directive) *FieldType {
+func NewFieldType(kind FieldKind, modelName string, dirs []directive.Directive) *FieldType {
 	return &FieldType{
 		Kind:       kind,
+		ModelName:  modelName,
 		Directives: dirs,
 	}
 }
@@ -51,4 +53,12 @@ func (ft FieldType) GetPrecisionScale() (string, string) {
 		}
 	}
 	return "", ""
+}
+
+// String returns a string representation of the field type
+func (ft FieldType) String() string {
+	if ft.Kind == KindCustom && ft.ModelName != "" {
+		return ft.ModelName
+	}
+	return ft.Kind.String()
 }
