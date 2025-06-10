@@ -2,8 +2,12 @@ package ir
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/pixperk/storm/internal/parser"
+	"github.com/pixperk/storm/internal/types/directive"
+	"github.com/pixperk/storm/internal/types/field"
 )
 
 type IRModel struct {
@@ -12,63 +16,106 @@ type IRModel struct {
 }
 
 type IRField struct {
-	Name       string
-	Type       FieldType
-	Relation   string
-	IsArray    bool
-	Directives []Directive
+	Name    string
+	Type    field.FieldType
+	IsArray bool
 }
 
 func ToIR(ast *parser.DSLFile) ([]IRModel, error) {
-	var ir []IRModel
-	relation := ""
+	var irModels []IRModel
 
 	for _, m := range ast.Models {
 		model := IRModel{
 			Name:   m.Name,
-			Fields: []IRField{},
+			Fields: make([]IRField, 0, len(m.Fields)),
 		}
 
 		for _, f := range m.Fields {
-			fieldType := MapFieldType(f.Type.Name)
-			if fieldType == TypeRelation {
-				relation = f.Type.Name // Store the related model name
-			} else {
-				relation = ""
-			}
-			directives, err := MapDirectives(f.Directives)
-			if err != nil {
-				return nil, err
+			fieldKind := MapFieldType(f.Type.Name)
+
+			directives := make([]directive.Directive, 0, len(f.Directives))
+			for _, rawDir := range f.Directives {
+				args := make([]string, 0, len(rawDir.Args))
+				for _, arg := range rawDir.Args {
+					switch {
+					case arg.String != nil:
+						args = append(args, *arg.String)
+					case arg.Ident != nil:
+						args = append(args, *arg.Ident)
+					case arg.Int != nil:
+						args = append(args, strconv.Itoa(*arg.Int))
+					case arg.Float != nil:
+						args = append(args, fmt.Sprintf("%f", *arg.Float))
+					}
+				}
+
+				if dirObj := MapDirective(rawDir.Name, args); dirObj != nil {
+					directives = append(directives, *dirObj)
+				}
 			}
 
+			field := field.NewFieldType(fieldKind, directives)
 			model.Fields = append(model.Fields, IRField{
-				Name:       f.Name,
-				Type:       fieldType,
-				IsArray:    f.Type.IsArray,
-				Directives: directives,
-				Relation:   relation,
+				Name:    f.Name,
+				Type:    *field,
+				IsArray: f.Type.IsArray,
 			})
 		}
 
-		ir = append(ir, model)
+		irModels = append(irModels, model)
 	}
-	return ir, nil
+
+	return irModels, nil
 }
 
-// DebugPrintIR prints the IR representation of the DSL file.
+// PrintIR prints the IR representation of the DSL file with database type information.
 func PrintIR(models []IRModel) {
+	fmt.Println("=============== IR Models ===============")
+
 	for _, m := range models {
-		fmt.Println("Model:", m.Name)
-		for _, f := range m.Fields {
-			arr := ""
-			if f.IsArray {
-				arr = "[]"
+		fmt.Printf("\n┌─── Model: %s ───┐\n", m.Name)
+
+		if len(m.Fields) == 0 {
+			fmt.Println("│  No fields defined                │")
+		} else {
+			for _, f := range m.Fields {
+				// Display field name and type
+				typeStr := f.Type.Kind.String()
+				if f.IsArray {
+					typeStr += "[]"
+				}
+
+				fmt.Printf("│  %-15s : %-10s │\n", f.Name, typeStr)
+
+				// Display database types
+				fmt.Printf("│    ├─ MySQL    : %-15s │\n", f.Type.Kind.MySQLType())
+				fmt.Printf("│    ├─ Postgres : %-15s │\n", f.Type.Kind.PostgresType())
+				fmt.Printf("│    └─ SQLite   : %-15s │\n", f.Type.Kind.SQLiteType())
+
+				// Display directives if any
+				if len(f.Type.Directives) > 0 {
+					fmt.Println("│    ┌─ Directives:            │")
+					for i, dir := range f.Type.Directives {
+						prefix := "│    ├─"
+						if i == len(f.Type.Directives)-1 {
+							prefix = "│    └─"
+						}
+
+						if len(dir.Args) > 0 {
+							fmt.Printf("%s @%-10s(%s) │\n", prefix, dir.Kind.String(), strings.Join(dir.Args, ", "))
+						} else {
+							fmt.Printf("%s @%-10s       │\n", prefix, dir.Kind.String())
+						}
+					}
+				}
+
+				// Add separator between fields
+				fmt.Println("│                               │")
 			}
-			fmt.Printf("  - %s: %s%s", f.Name, f.Type, arr)
-			if len(f.Directives) > 0 {
-				fmt.Printf(" (directives: %v)", f.Directives)
-			}
-			fmt.Println()
 		}
+
+		fmt.Println("└───────────────────────────────┘")
 	}
+
+	fmt.Println("\n=========== End of IR Models ===========")
 }
