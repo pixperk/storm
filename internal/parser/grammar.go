@@ -6,8 +6,9 @@ import (
 )
 
 type DSLFile struct {
-	DatabaseURL string   `"database" "=" @String`
-	Models      []*Model `@@*`
+	DatabaseDriver string   `"database" "driver" "=" @String`
+	DatabaseURL    string   `"database" "url" "=" @String`
+	Models         []*Model `@@*`
 }
 
 type Model struct {

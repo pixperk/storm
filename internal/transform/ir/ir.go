@@ -21,8 +21,18 @@ type IRField struct {
 	IsArray bool
 }
 
-func ToIR(ast *parser.DSLFile) ([]IRModel, error) {
-	var irModels []IRModel
+type IR struct {
+	DatabaseDriver string
+	DatabaseURL    string
+	Models         []IRModel
+}
+
+func ToIR(ast *parser.DSLFile) (*IR, error) {
+	ir := &IR{
+		DatabaseDriver: ast.DatabaseDriver,
+		DatabaseURL:    ast.DatabaseURL,
+		Models:         make([]IRModel, 0, len(ast.Models)),
+	}
 
 	for _, m := range ast.Models {
 		model := IRModel{
@@ -62,17 +72,19 @@ func ToIR(ast *parser.DSLFile) ([]IRModel, error) {
 			})
 		}
 
-		irModels = append(irModels, model)
+		ir.Models = append(ir.Models, model)
 	}
 
-	return irModels, nil
+	return ir, nil
 }
 
 // PrintIR prints the IR representation of the DSL file with database type information.
-func PrintIR(models []IRModel) {
+func PrintIR(ir *IR) {
 	fmt.Println("=============== IR Models ===============")
+	fmt.Printf("Database Driver: %s\n", ir.DatabaseDriver)
+	fmt.Printf("Database URL: %s\n", ir.DatabaseURL)
 
-	for _, m := range models {
+	for _, m := range ir.Models {
 		fmt.Printf("\n┌─── Model: %s ───┐\n", m.Name)
 
 		if len(m.Fields) == 0 {

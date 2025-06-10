@@ -14,6 +14,9 @@ func ParseDSL(path string) (*DSLFile, error) {
 }
 
 func DebugPrint(ast *DSLFile) {
+	fmt.Printf("Database Driver: %s\n", ast.DatabaseDriver)
+	fmt.Printf("Database URL: %s\n", ast.DatabaseURL)
+
 	for _, model := range ast.Models {
 		fmt.Printf("Model: %s\n", model.Name)
 		for _, field := range model.Fields {
