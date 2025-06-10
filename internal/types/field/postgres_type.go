@@ -1,21 +1,26 @@
 package field
 
-func (k FieldKind) PostgresType() string {
-	switch k {
+func (ft FieldType) PostgresType() string {
+	switch ft.Kind {
 	case KindInt:
 		return "INTEGER"
 	case KindFloat:
 		return "DOUBLE PRECISION"
 	case KindDecimal:
+		if precision, scale := ft.GetPrecisionScale(); precision != "" && scale != "" {
+			return "NUMERIC(" + precision + "," + scale + ")"
+		}
 		return "NUMERIC(10,2)"
 	case KindBigInt:
 		return "BIGINT"
 	case KindString:
-		return "VARCHAR(255)"
+		length := returnLength(ft)
+		return "VARCHAR(" + length + ")"
 	case KindText:
 		return "TEXT"
 	case KindChar:
-		return "CHAR(255)"
+		length := returnLength(ft)
+		return "CHAR(" + length + ")"
 	case KindBoolean:
 		return "BOOLEAN"
 	case KindDateTime:

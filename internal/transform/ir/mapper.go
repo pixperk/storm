@@ -19,8 +19,10 @@ func MapFieldType(s string) field.FieldKind {
 		return field.KindBigInt // Floating point types
 	case "float", "double", "real":
 		return field.KindFloat
+	case "decimal", "numeric":
+		return field.KindDecimal
 
-	// String types
+		// String types
 	case "string", "varchar":
 		return field.KindString
 

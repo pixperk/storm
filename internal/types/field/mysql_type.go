@@ -1,21 +1,26 @@
 package field
 
-func (k FieldKind) MySQLType() string {
-	switch k {
+func (ft FieldType) MySQLType() string {
+	switch ft.Kind {
 	case KindInt:
 		return "INT"
 	case KindFloat:
 		return "DOUBLE"
 	case KindDecimal:
+		if precision, scale := ft.GetPrecisionScale(); precision != "" && scale != "" {
+			return "NUMERIC(" + precision + "," + scale + ")"
+		}
 		return "DECIMAL(10,2)"
 	case KindBigInt:
 		return "BIGINT"
 	case KindString:
-		return "VARCHAR(255)"
+		length := returnLength(ft)
+		return "VARCHAR(" + length + ")"
 	case KindText:
 		return "TEXT"
 	case KindChar:
-		return "CHAR(255)"
+		length := returnLength(ft)
+		return "CHAR(" + length + ")"
 	case KindBoolean:
 		return "TINYINT(1)"
 	case KindDateTime:
@@ -27,7 +32,8 @@ func (k FieldKind) MySQLType() string {
 	case KindTimestamp:
 		return "TIMESTAMP"
 	case KindBinary:
-		return "VARBINARY(255)"
+		length := returnLength(ft)
+		return "BINARY(" + length + ")"
 	case KindJSON:
 		return "JSON"
 	case KindUUID:

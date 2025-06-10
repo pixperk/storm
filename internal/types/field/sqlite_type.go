@@ -1,7 +1,7 @@
 package field
 
-func (k FieldKind) SQLiteType() string {
-	switch k {
+func (ft FieldType) SQLiteType() string {
+	switch ft.Kind {
 	case KindInt:
 		return "INTEGER"
 	case KindFloat:

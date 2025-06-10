@@ -88,9 +88,9 @@ func PrintIR(models []IRModel) {
 				fmt.Printf("│  %-15s : %-10s │\n", f.Name, typeStr)
 
 				// Display database types
-				fmt.Printf("│    ├─ MySQL    : %-15s │\n", f.Type.Kind.MySQLType())
-				fmt.Printf("│    ├─ Postgres : %-15s │\n", f.Type.Kind.PostgresType())
-				fmt.Printf("│    └─ SQLite   : %-15s │\n", f.Type.Kind.SQLiteType())
+				fmt.Printf("│    ├─ MySQL    : %-15s │\n", f.Type.MySQLType())
+				fmt.Printf("│    ├─ Postgres : %-15s │\n", f.Type.PostgresType())
+				fmt.Printf("│    └─ SQLite   : %-15s │\n", f.Type.SQLiteType())
 
 				// Display directives if any
 				if len(f.Type.Directives) > 0 {
